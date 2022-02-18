@@ -51,6 +51,7 @@ RUN curl https://github.com/mozilla/sops/releases/download/v3.6.1/sops_3.6.1_amd
 
 RUN groupadd -g 1000 onethousand
 RUN useradd -g onethousand -G sudo -u 1000 -m user
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 USER user
 RUN mkdir /home/user/host
