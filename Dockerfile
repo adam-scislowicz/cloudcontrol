@@ -1,22 +1,22 @@
 FROM debian:stable-slim
 
+ENV UID=1000
+ENV GID=1000
+ENV USER=ubuntu
+
+WORKDIR /tmp
+
 LABEL maintainer="Adam Scislowicz <adam.scislowicz@gmail.com>"
 
-RUN apt-get update
-RUN apt-get install -y curl gnupg2 lsb-release software-properties-common
-
-# Install terraform repo
-RUN curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
-RUN apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-
-# Install Ansible repo
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C367
-RUN apt-add-repository "deb http://ppa.launchpad.net/ansible/ansible/ubuntu trusty main"
-
-RUN apt-get update
-RUN apt-get upgrade -y
-
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
+RUN apt-get update \
+    && apt-get install -y curl gnupg2 lsb-release software-properties-common \
+    && curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add - \
+    && apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C367 \
+    && apt-add-repository "deb http://ppa.launchpad.net/ansible/ansible/ubuntu trusty main" \
+    && apt-get update \
+    && apt-get upgrade -y \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     ansible \
     debconf \
     dstat \
@@ -39,19 +39,19 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
     tshark \
     tzdata \
     unzip \
-    wget
+    wget \
+    && terraform -install-autocomplete \
+    && pip3 install --no-cache-dir awscli nox \
+    && curl https://rclone.org/install.sh | bash \
+    && curl https://github.com/mozilla/sops/releases/download/v3.6.1/sops_3.6.1_amd64.deb \
+        -Lo sops_3.6.1_amd64.deb && \
+        dpkg -i ./sops_3.6.1_amd64.deb \
+    && groupadd -g $GID $USER \
+    && useradd -l -g $USER -G sudo -u $UID -m $USER \
+    && echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN terraform -install-autocomplete
-RUN pip3 install awscli
-RUN curl https://rclone.org/install.sh | bash
+USER $USER
 
-RUN curl https://github.com/mozilla/sops/releases/download/v3.6.1/sops_3.6.1_amd64.deb \
-    -Lo sops_3.6.1_amd64.deb && \
-    dpkg -i ./sops_3.6.1_amd64.deb
-
-RUN groupadd -g 1000 onethousand
-RUN useradd -g onethousand -G sudo -u 1000 -m user
-RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
-
-USER user
-RUN mkdir /home/user/host
+RUN mkdir /home/$USER/cloudcontrol

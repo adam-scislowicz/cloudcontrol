@@ -130,5 +130,3 @@ resource "aws_eip" "vpop-eip-1-for-i0001" {
 #  associate_with_private_ip = aws_instance.load-generator.private_ip
 #  depends_on                = [aws_internet_gateway.aws_ncal_gw]
 #}
-
-
